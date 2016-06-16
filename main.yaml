@@ -1,0 +1,17 @@
+# The following config is based on the Node Edge Micro Proxy.
+# proxyURI is the URI to that proxy on your organization in Edge
+# proxyKey is the Customer Key from the Developer App associate with that proxy
+# apiKeyHeader is the Header in which clients will pass their API Key
+port: 8080
+target: http://httpbin.org
+pipes:
+  main:
+    request:
+    - verifyAPIKey:
+        proxyURI:     https://sganyo-test.apigee.net/remoteproxy/v2/oauth/verifyApiKey
+        proxyKey:     picklepicklepickle
+        apiKeyHeader: X-Apigee-API-Key
+proxies:
+  - host: localhost
+    path: /
+    pipe: main
