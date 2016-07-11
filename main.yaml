@@ -8,9 +8,9 @@ pipes:
   main:
     request:
     - verifyAPIKey:
-        apidURL:     http://0:8081/apid/verifyapikey
-        apiOrg:      test
-        apiKeyHeader: X-Apigee-API-Key
+        organization: test
+        environment:  test
+        keyHeader: X-Apigee-API-Key
 proxies:
   - host: localhost
     path: /
