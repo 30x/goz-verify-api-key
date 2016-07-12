@@ -94,10 +94,10 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 
 		msg := verifyAPIBody{
 			action: "verify",
-			"organization", f.config.organization,
-			"environment", f.config.environment,
-			"key", apiKey,
-			"uriPath": path,
+			organization: f.config.organization,
+			environment: f.config.environment,
+			key: apiKey,
+			uriPath: path,
 		}
 		body, err := json.Marshal(msg)
 		if err != nil {
