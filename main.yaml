@@ -8,7 +8,8 @@ pipes:
   main:
     request:
     - verifyAPIKey:
-        organization: test
+        apidUri: http://localhost:8181/verifiers/apikey
+        organization: radical-new
         environment:  test
         keyHeader: X-Apigee-API-Key
 proxies:

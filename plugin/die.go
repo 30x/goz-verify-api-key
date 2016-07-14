@@ -12,18 +12,21 @@ Sample Configuration:
 package plugin
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/30x/gozerian/pipeline"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
-const APID_URI = "http://localhost:8081/verifiers/apikey"
+const DEFAULT_APID_URI = "http://localhost:8181/verifiers/apikey"
+const DEFAULT_KEY_HEADER = "X-Apigee-API-Key"
 
 type verifyAPIKeyConfig struct {
+	apidUri      string
 	keyHeader    string
 	organization string
 	environment  string
@@ -33,13 +36,34 @@ type verifyAPIKeyFitting struct {
 	config verifyAPIKeyConfig
 }
 
-type verifyAPIBody struct {
-	action       string
-	organization string
-	environment  string
-	key          string
-	uriPath      string
+//type SucResponseDetail struct {
+//	Key             string `json:"key"`
+//	ExpiresAt       int64  `json:"expiresAt"`
+//	IssuedAt        int64  `json:"issuedAt"`
+//	Status          string `json:"status"`
+//	RedirectionURIs string `json:"redirectionURIs"`
+//	DeveloperAppId  string `json:"developerId"`
+//	DeveloperAppNam string `json:"developerAppName"`
+//}
+
+type ErrResponseDetail struct {
+	ErrorCode string `json:"errorCode"`
+	Reason    string `json:"reason"`
 }
+
+type KMSResponseSuccess struct {
+	//Rspinfo      SucResponseDetail `json:"result"`
+	Rspinfo map[string]interface{} `json:"result"`
+	ResponseType string            `json:"responseType"`
+	ResponseCode int               `json:"responseCode"`
+}
+
+type KMSResponseFail struct {
+	Errinfo      ErrResponseDetail `json:"result"`
+	ResponseType string            `json:"responseType"`
+	ResponseCode int               `json:"responseCode"`
+}
+
 
 // CreateFitting exported function to create the fitting
 func CreateFitting(config interface{}) (pipeline.Fitting, error) {
@@ -50,13 +74,18 @@ func CreateFitting(config interface{}) (pipeline.Fitting, error) {
 	}
 
 	c := verifyAPIKeyConfig{
+		apidUri:      conf["apidUri"].(string),
 		keyHeader:    conf["keyHeader"].(string),
 		organization: conf["organization"].(string),
 		environment:  conf["environment"].(string),
 	}
 
+	if c.apidUri == "" {
+		c.apidUri = DEFAULT_APID_URI
+	}
+
 	if c.keyHeader == "" {
-		return nil, fmt.Errorf("invalid config: missing keyHeader")
+		c.keyHeader = DEFAULT_KEY_HEADER
 	}
 
 	if c.organization == "" {
@@ -86,44 +115,31 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 			return
 		}
 
-		//parse the path
-		path := r.URL.Path
+		form := url.Values{}
+		form.Add("action", "verify")
+		form.Add("organization", f.config.organization)
+		form.Add("environment", f.config.environment)
+		form.Add("key", apiKey)
+		form.Add("uriPath", r.URL.Path)
+		log.Debugf("Posting %s with body:\n", f.config.apidUri, form.Encode())
 
-		//create our request
-		client := &http.Client{}
-
-		msg := verifyAPIBody{
-			action: "verify",
-			organization: f.config.organization,
-			environment: f.config.environment,
-			key: apiKey,
-			uriPath: path,
-		}
-		body, err := json.Marshal(msg)
-		if err != nil {
-			log.Debugf("error creating request body: %s\n", err.Error())
-			control.SendError(err)
-			return
-		}
-
-		req, err := http.NewRequest("POST", APID_URI, bytes.NewBuffer(body))
+		req, err := http.NewRequest("POST", f.config.apidUri, strings.NewReader(form.Encode()))
 		if err != nil {
 			log.Debugf("error creating request: %s\n", err.Error())
 			control.SendError(err)
 			return
 		}
 
-		log.Debugf("Posting %s with body:\n", req.URL.String(), body)
+		//req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-		req.Header.Set("Content-Type", "application/json")
-
+		client := &http.Client{}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Debugf("error getting from server: %s\n", err.Error())
 			control.SendError(err)
 			return
 		}
-
 		defer res.Body.Close()
 
 		resBytes, err := ioutil.ReadAll(res.Body)
@@ -135,22 +151,43 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 
 		// if we get a forbidden, pass it along.  Any other error will be sent as well
 		if res.StatusCode < 200 || res.StatusCode >= 300 {
-			log.Debugf("error from server on key verification: %s\n", string(resBytes))
-			control.SendError(fmt.Errorf("error from server on key verification: %s (%d)", string(resBytes), res.StatusCode))
+			log.Debugf("key verification error: %s\n", string(resBytes))
+			control.SendError(fmt.Errorf("key verification error: %s (%d)", string(resBytes), res.StatusCode))
 			return
 		}
 
-		// Take everything from the valid response and pass it along.
-		newFlowVars := make(map[string]interface{})
-		err = json.Unmarshal(resBytes, &newFlowVars)
+		// check for failed
+		failResponse := KMSResponseFail{}
+		err = json.Unmarshal(resBytes, &failResponse)
 		if err != nil {
 			control.SendError(err)
 			return
 		}
+		if failResponse.Errinfo.ErrorCode != "" {
+			msg, _ := json.Marshal(failResponse.Errinfo)
+			w.Write([]byte(msg))
+			// TODO: this needs to be revisited!!!
+			// 1. the response code should not be dictated by apid
+			// 2. should it return http.StatusUnauthorized? or 404? should this be an option?
+			respCode := failResponse.ResponseCode
+			if respCode == 404 {
+				respCode = http.StatusUnauthorized
+			}
+			w.WriteHeader(respCode)
+			return
+		}
 
+		// store valid response in flowdata
+		response := KMSResponseSuccess{}
+		err = json.Unmarshal(resBytes, &response)
+		if err != nil {
+			control.SendError(err)
+			return
+		}
 		flowData := control.FlowData()
-		for k, v := range newFlowVars {
+		for k, v := range response.Rspinfo {
 			flowData[k] = v
+			log.Debugf("Setting flow var: %s to: %v\n", k, v)
 		}
 
 		log.Debugln("Successful validation!")
