@@ -156,7 +156,6 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 		}
 		if failResponse.Errinfo.ErrorCode != "" {
 			msg, _ := json.Marshal(failResponse.Errinfo)
-			w.Write([]byte(msg))
 			// TODO: this needs to be revisited!!!
 			// 1. the response code should not be dictated by apid
 			// 2. should it return http.StatusUnauthorized? or 404? should this be an option?
@@ -165,6 +164,7 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 				respCode = http.StatusUnauthorized
 			}
 			w.WriteHeader(respCode)
+			w.Write([]byte(msg))
 			return
 		}
 
