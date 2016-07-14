@@ -9,7 +9,7 @@ Sample Configuration:
 	organization: test
 	environment: test
 */
-package plugin
+package verifyApiKey
 
 import (
 	"encoding/json"
