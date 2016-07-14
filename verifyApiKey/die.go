@@ -5,9 +5,11 @@ the request will continue.
 
 Sample Configuration:
 
-	keyHeader: X-Apigee-API-Key
-	organization: test
-	environment: test
+    - verifyAPIKey:
+        apidUri: http://localhost:8181/verifiers/apikey
+        organization: radical-new
+        environment:  test
+        keyHeader: X-Apigee-API-Key
 */
 package verifyApiKey
 
@@ -36,23 +38,12 @@ type verifyAPIKeyFitting struct {
 	config verifyAPIKeyConfig
 }
 
-//type SucResponseDetail struct {
-//	Key             string `json:"key"`
-//	ExpiresAt       int64  `json:"expiresAt"`
-//	IssuedAt        int64  `json:"issuedAt"`
-//	Status          string `json:"status"`
-//	RedirectionURIs string `json:"redirectionURIs"`
-//	DeveloperAppId  string `json:"developerId"`
-//	DeveloperAppNam string `json:"developerAppName"`
-//}
-
 type ErrResponseDetail struct {
 	ErrorCode string `json:"errorCode"`
 	Reason    string `json:"reason"`
 }
 
 type KMSResponseSuccess struct {
-	//Rspinfo      SucResponseDetail `json:"result"`
 	Rspinfo map[string]interface{} `json:"result"`
 	ResponseType string            `json:"responseType"`
 	ResponseCode int               `json:"responseCode"`
@@ -92,7 +83,7 @@ func CreateFitting(config interface{}) (pipeline.Fitting, error) {
 		return nil, fmt.Errorf("invalid config: missing organization")
 	}
 
-	if c.organization == "" {
+	if c.environment == "" {
 		return nil, fmt.Errorf("invalid config: missing environment")
 	}
 
