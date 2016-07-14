@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/30x/gozerian/go_gateway"
 	"github.com/30x/gozerian/pipeline"
-	"github.com/30x/goz-verify-api-key/verifyApiKey"
+	"github.com/30x/goz-verify-api-key/verifyAPIKey"
 	"os"
 	"fmt"
 )
@@ -12,7 +12,7 @@ import (
 // Install the node Edge Micro proxy on Edge first and configure via main.yaml
 
 func main() {
-	pipeline.RegisterDie("verifyAPIKey", verifyApiKey.CreateFitting)
+	pipeline.RegisterDie("verifyAPIKey", verifyAPIKey.CreateFitting)
 
 	yamlReader, err := os.Open("main.yaml")
 	if err != nil {

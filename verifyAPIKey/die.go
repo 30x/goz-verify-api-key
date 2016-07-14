@@ -11,7 +11,7 @@ Sample Configuration:
         environment:  test
         keyHeader: X-Apigee-API-Key
 */
-package verifyApiKey
+package verifyAPIKey
 
 import (
 	"encoding/json"
