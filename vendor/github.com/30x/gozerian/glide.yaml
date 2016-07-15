@@ -1,0 +1,6 @@
+package: github.com/30x/gozerian
+import:
+- package: github.com/gorilla/websocket
+- package: github.com/Sirupsen/logrus
+- package: gopkg.in/yaml.v2
+- package: github.com/spf13/viper
