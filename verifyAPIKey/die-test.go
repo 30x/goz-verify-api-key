@@ -42,7 +42,7 @@ var _ = Describe("Test Mock Server", func() {
 
 	})
 
-	It("Bad api key ", func() {
+	It("Not Found api key ", func() {
 
 		const headerKey = "X-Apigee-API-Key"
 		const headerValue = "TestValue"
@@ -69,11 +69,23 @@ var _ = Describe("Test Mock Server", func() {
 
 		formBytes := []byte(formAsString)
 
+		failureResponse := `
+		{
+                "responseType": "APIKeyContext",
+                "responseCode": 404,
+                "result": {
+                  "errorCode": "FOO_AUTHENTICATION_FAILED",
+                  "reason": "APIKey expired"
+                }
+              }`
+
 		//post to the endpoint, then return a 404
-		server.NewPost("/verifiers/apikey", "application/x-www-form-urlencoded", formBytes).ToResponse(http.StatusNotFound, []byte{}).Add()
+		server.NewPost("/verifiers/apikey", "application/x-www-form-urlencoded", formBytes).ToResponse(http.StatusOK, []byte(failureResponse)).Add()
 
 		//start the server
 		err := server.StartAsync("127.0.0.1:8181")
+
+		defer server.Shutdown()
 
 		Expect(err).Should(BeNil(), "Server should start")
 
@@ -91,7 +103,7 @@ var _ = Describe("Test Mock Server", func() {
 		requestHandler(w, req)
 
 		//when apid returns a 404, the plugin should return a 401
-		Expect(w.Code).Should(Equal(http.StatusForbidden), "No api key was presented")
+		Expect(w.Code).Should(Equal(http.StatusUnauthorized), "No api key was presented")
 
 	})
 
@@ -124,16 +136,16 @@ var _ = Describe("Test Mock Server", func() {
 
 		template := `
 		{
-                responseType: "APIKeyContext"
-                responseCode: 200
-                result: {
-                  key: "%s"
-                  expiresAt: 1234567890
-                  issuedAt: 1234567890
-                  status: "abc123"
-                  redirectionURIs: "abc123"
-                  developerAppName: "abc123"
-                  developerId: "abc123" 
+                "responseType": "APIKeyContext",
+                "responseCode": 200,
+                "result": {
+                  "key": "%s",
+                  "expiresAt": 1234567890,
+                  "issuedAt": 1234567890,
+                  "status": "abc123",
+                  "redirectionURIs": "abc123",
+                  "developerAppName": "abc123",
+                  "developerId": "abc123" 
                 }
               }`
 
@@ -144,6 +156,7 @@ var _ = Describe("Test Mock Server", func() {
 
 		//start the server
 		err := server.StartAsync("127.0.0.1:8181")
+		defer server.Shutdown()
 
 		Expect(err).Should(BeNil(), "Server should start")
 
@@ -162,20 +175,12 @@ var _ = Describe("Test Mock Server", func() {
 
 		Expect(w.Code).Should(Equal(http.StatusOK), "Api Key")
 
-		Expect(w.Body).Should(Equal(http.StatusOK), "Body")
+		body := w.Body.String()
+
+		Expect(body).Should(Equal(""), "Body")
 
 	})
 })
-
-/**
-form := url.Values{}
-		form.Add("action", "verify")
-		form.Add("organization", f.config.organization)
-		form.Add("environment", f.config.environment)
-		form.Add("key", apiKey)
-		form.Add("uriPath", r.URL.Path)
-		log.Debugf("Posting %s with body:\n", f.config.apidUri, form.Encode())
-		**/
 
 //mock endpoint url. "http://localhost:8181/verifiers/apikey"
 func createPipeline() pipeline.Pipe {
