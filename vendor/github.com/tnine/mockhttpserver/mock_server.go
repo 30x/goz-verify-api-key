@@ -2,12 +2,13 @@ package mockhttpserver
 
 import (
 	"errors"
-	"io"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -37,7 +38,7 @@ type Request struct {
 	//the Url of the request
 	url string
 	//the body of the request that's expected.  Can be nil
-	body io.Reader
+	body []byte
 	//the list of required headers
 	header []header
 
@@ -57,7 +58,7 @@ type Response struct {
 	status int
 
 	//The body to return in the stream, can be nil for no boxy
-	body io.Reader
+	body []byte
 
 	//All headers that will be returned
 	header []header
@@ -67,7 +68,7 @@ type Response struct {
 }
 
 //NewRequest create a new request
-func (mockServer *MockServer) NewRequest(verb string, url string, body io.Reader) *Request {
+func (mockServer *MockServer) NewRequest(verb string, url string, body []byte) *Request {
 	return &Request{
 		verb:       verb,
 		url:        url,
@@ -82,6 +83,11 @@ func (mockServer *MockServer) NewGet(url string) *Request {
 	return mockServer.NewRequest("GET", url, nil)
 }
 
+//NewPost convenience method for new NewPost
+func (mockServer *MockServer) NewPost(url string, contentType string, body []byte) *Request {
+	return mockServer.NewRequest("POST", url, body).AddHeader("Content-Type", contentType)
+}
+
 //AddHeader return ourselves so we can continue to add headers
 func (request *Request) AddHeader(name string, value string) *Request {
 	request.header = append(request.header, header{name: name, value: value})
@@ -90,7 +96,7 @@ func (request *Request) AddHeader(name string, value string) *Request {
 }
 
 //ToResponse Add the response to the request
-func (request *Request) ToResponse(status int, body io.Reader) *Response {
+func (request *Request) ToResponse(status int, body []byte) *Response {
 	return &Response{
 		status:  status,
 		body:    body,
@@ -127,9 +133,41 @@ func (mockServer *MockServer) Listen(address string) error {
 			route = route.HeadersRegexp(header.name, header.value)
 		}
 
+		expectedBody := []byte{}
+
 		// TODO, we need to group by URL and add switch matching for content body
 		//Set up our handler function to respond.
 		route.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+
+			//if we have a body make sure it's equal.
+
+			log.Println("Incoming request for", req.URL.Path)
+
+			if len(expectedBody) > 0 {
+
+				passedBody, err := ioutil.ReadAll(req.Body)
+
+				if err != nil {
+					http.Error(w, "Unable to read body", http.StatusInternalServerError)
+					return
+				}
+
+				defer req.Body.Close()
+
+				equals := reflect.DeepEqual(expectedBody, passedBody)
+
+				if !equals {
+
+					expected := string(expectedBody)
+					actual := string(passedBody)
+
+					resposneBody := fmt.Sprintf("Expected body of \n===============\n %s \n===============\n\n\n.  However received body of \n===============\n %s \n===============\n", expected, actual)
+
+					http.Error(w, resposneBody, http.StatusInternalServerError)
+					return
+				}
+
+			}
 
 			//we've set the headers
 			for _, header := range response.header {
@@ -139,19 +177,19 @@ func (mockServer *MockServer) Listen(address string) error {
 			//write the status
 			w.WriteHeader(response.status)
 
-			responseBody, err := ioutil.ReadAll(response.body)
+			if len(response.body) > 0 {
+				_, err := w.Write(response.body)
 
-			if err != nil {
-				log.Printf("Unable to read response body on method %s and url %s.  Error is %s", request.verb, request.url, err)
+				if err != nil {
+					errorString := fmt.Sprintf("Unable to write response body on method %s and url %s.  Error is %s", request.verb, request.url, err)
+
+					fmt.Println(errorString)
+
+					http.Error(w, errorString, http.StatusInternalServerError)
+					return
+				}
 			}
 
-			_, err = w.Write(responseBody)
-
-			if err != nil {
-				log.Printf("Unable to write response body on method %s and url %s.  Error is %s", request.verb, request.url, err)
-			}
-
-			log.Println("Incoming request for", req.URL.Path)
 		})
 
 	}
@@ -218,7 +256,7 @@ func testSocket(address string) error {
 				break
 			}
 
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 
 		close(started)
@@ -231,5 +269,9 @@ func testSocket(address string) error {
 	case <-time.After(5 * time.Second):
 		return errors.New("Timed out after 5 seconds")
 	}
+
+}
+
+func writeServerError(error string) {
 
 }
