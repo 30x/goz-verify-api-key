@@ -12,6 +12,7 @@ pipes:
         organization: radical-new
         environment:  test
         keyHeader: X-Apigee-API-Key
+        send404OnError: true
 proxies:
   - host: localhost
     path: /
