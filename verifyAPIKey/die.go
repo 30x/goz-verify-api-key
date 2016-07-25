@@ -41,21 +41,19 @@ type verifyAPIKeyFitting struct {
 	config verifyAPIKeyConfig
 }
 
-type ErrResponseDetail struct {
+type ErrResultDetail struct {
 	ErrorCode string `json:"errorCode"`
 	Reason    string `json:"reason"`
 }
 
 type KMSResponseSuccess struct {
 	Rspinfo map[string]interface{} `json:"result"`
-	ResponseType string            `json:"responseType"`
-	ResponseCode int               `json:"responseCode"`
+	Type string            `json:"type"`
 }
 
 type KMSResponseFail struct {
-	Errinfo      ErrResponseDetail `json:"result"`
-	ResponseType string            `json:"responseType"`
-	ResponseCode int               `json:"responseCode"`
+	Errinfo      ErrResultDetail `json:"result"`
+	Type string            `json:"type"`
 }
 
 
