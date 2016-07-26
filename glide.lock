@@ -1,5 +1,5 @@
 hash: 8a8f885b82730e2a97f66ed69fa4d8ed76dfd3e1a4c8ae4aa1495e46473aeb33
-updated: 2016-07-15T12:45:38.670996093-06:00
+updated: 2016-07-26T11:48:01.576782897-06:00
 imports:
 - name: github.com/30x/gozerian
   version: ff8278d6367c9302502ab08101f09286fa5dd1be
@@ -7,6 +7,12 @@ imports:
   - go_gateway
   - pipeline
   - test_util
+- name: github.com/afex/hystrix-go
+  version: 39520ddd07a9d9a071d615f7476798659f5a3b89
+  subpackages:
+  - hystrix
+  - hystrix/metric_collector
+  - hystrix/rolling
 - name: github.com/BurntSushi/toml
   version: bec2dacf4b590d26237cfebff4471e21ce543494
 - name: github.com/fsnotify/fsnotify

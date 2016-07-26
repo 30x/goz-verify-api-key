@@ -103,7 +103,7 @@ var _ = Describe("Test Mock Server", func() {
 		requestHandler(w, req)
 
 		//when apid returns a 404, the plugin should return a 401
-		Expect(w.Code).Should(Equal(http.StatusUnauthorized), "No api key was presented")
+		Expect(w.Code).Should(Equal(http.StatusForbidden), "No api key was presented")
 
 	})
 
