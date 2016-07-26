@@ -1,5 +1,9 @@
 package: github.com/30x/goz-verify-api-key
 import:
+- package: github.com/afex/hystrix-go/hystrix
+  vcs: git
+  version: 39520ddd07a9d9a071d615f7476798659f5a3b89  
+testImport:
 - package: github.com/onsi/ginkgo/ginkgo
   vcs: git
   version: 01a0bc330e324e78c3e84f199c552481e3395179
@@ -9,6 +13,3 @@ import:
 - package: github.com/tnine/mockhttpserver
   vcs: git
   version: 4254dd78072dad61d89cba893096d5c2e04c0972
-- package: github.com/afex/hystrix-go/hystrix
-  vcs: git
-  version: 39520ddd07a9d9a071d615f7476798659f5a3b89  
