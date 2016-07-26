@@ -9,3 +9,6 @@ import:
 - package: github.com/tnine/mockhttpserver
   vcs: git
   version: 4254dd78072dad61d89cba893096d5c2e04c0972
+- package: github.com/afex/hystrix-go/hystrix
+  vcs: git
+  version: 39520ddd07a9d9a071d615f7476798659f5a3b89  

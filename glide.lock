@@ -1,5 +1,5 @@
-hash: 8a8f885b82730e2a97f66ed69fa4d8ed76dfd3e1a4c8ae4aa1495e46473aeb33
-updated: 2016-07-26T11:48:01.576782897-06:00
+hash: 9bfb5643656185ac06b9d3fada92170b5469d63930e4311cb456a31e83ad46a3
+updated: 2016-07-26T14:41:35.097970254-06:00
 imports:
 - name: github.com/30x/gozerian
   version: ff8278d6367c9302502ab08101f09286fa5dd1be
@@ -9,6 +9,7 @@ imports:
   - test_util
 - name: github.com/afex/hystrix-go
   version: 39520ddd07a9d9a071d615f7476798659f5a3b89
+  vcs: git
   subpackages:
   - hystrix
   - hystrix/metric_collector
