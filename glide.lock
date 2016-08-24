@@ -1,8 +1,8 @@
 hash: 915fedafeb1a3c71e98c65ee67969b990a150482259f61ff5b5e15eb3361940c
-updated: 2016-08-18T15:34:16.320256691-07:00
+updated: 2016-08-24T15:10:25.775390759-07:00
 imports:
 - name: github.com/30x/gozerian
-  version: a90bab1903db540798c0ae1934b17cb7b843adb0
+  version: b56afce8e8af1ddffa9436b40d93f597029bfc66
   subpackages:
   - go_gateway
   - pipeline
@@ -14,14 +14,12 @@ imports:
   - hystrix
   - hystrix/metric_collector
   - hystrix/rolling
-- name: github.com/BurntSushi/toml
-  version: 99064174e013895bbd9b025c31100bd1d9b590ca
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
 - name: github.com/gorilla/websocket
   version: a69d25be2fe2923a97c2af6849b2f52426f68fc0
 - name: github.com/hashicorp/hcl
-  version: d8c773c4cba11b11539e3d45f93daeaa5dcf1fa1
+  version: baeb59c710717b06aac1dbe2270e8192ec593244
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -68,14 +66,18 @@ imports:
   - matchers/support/goraph/edge
   - matchers/support/goraph/node
   - matchers/support/goraph/util
+- name: github.com/pelletier/go-buffruneio
+  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
+- name: github.com/pelletier/go-toml
+  version: 5a62685873ef617233ab5f1b825a6e4a758e16cf
 - name: github.com/pkg/errors
-  version: a22138067af1c4942683050411a841ade67fe1eb
+  version: 17b591df37844cde689f4d5813e5cea0927d8dd2
 - name: github.com/pkg/sftp
   version: a71e8f580e3b622ebff585309160b1cc549ef4d2
 - name: github.com/Sirupsen/logrus
   version: 08a8a7c27e3d058a8989316a850daad1c10bf4ab
 - name: github.com/spf13/afero
-  version: b28a7effac979219c2a2ed6205a4d70e4b1bcd02
+  version: 20500e2abd0d1f4564a499e83d11d6c73cd58c27
   subpackages:
   - mem
   - sftp
@@ -84,11 +86,11 @@ imports:
 - name: github.com/spf13/jwalterweatherman
   version: 33c24e77fb80341fe7130ee7c594256ff08ccc46
 - name: github.com/spf13/pflag
-  version: 4f9190456aed1c2113ca51ea9b89219747458dc1
+  version: 103ce5cd2042f2fe629c1957abb64ab3e7f50235
 - name: github.com/spf13/viper
-  version: 654fc7bb54d0c138ef80405ff577391f79c0c32d
+  version: 7fb2782df3d83e0036cc89f461ed0422628776f4
 - name: golang.org/x/crypto
-  version: 9fbab14f903f89e23047b5971369b86380230e56
+  version: 351dc6a5bf92a5f2ae22fadeee08eb6a45aa2d93
   subpackages:
   - ssh
   - curve25519
@@ -129,6 +131,6 @@ testImports:
   version: 9a3d4236b03bb5d26f7951134d248f9d5510d599
   vcs: git
 - name: golang.org/x/net
-  version: 07b51741c1d6423d4a6abab1c49940ec09cb1aaf
+  version: 7394c112eae4dba7e96bfcfe738e6373d61772b4
   subpackages:
   - netutil

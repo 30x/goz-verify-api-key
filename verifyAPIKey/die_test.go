@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"time"
 
 	"github.com/30x/gozerian/pipeline"
 	"github.com/30x/gozerian/test_util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/tnine/mockhttpserver"
+	"time"
 )
 
 const organization = "radical-new"
@@ -23,10 +23,10 @@ var _ = Describe("Test Mock Server", func() {
 
 	It("No api key ", func() {
 		//use the pipe fitting to create the pipeline
-		pipeline := createPipeline()
+		pipe := createPipe()
 
 		//get our request handler
-		requestHandler := pipeline.RequestHandlerFunc()
+		requestHandler := pipe.RequestHandlerFunc()
 
 		//create a mock reqeust.
 		req, err := http.NewRequest("GET", "http://example.com/foo", nil)
@@ -35,6 +35,9 @@ var _ = Describe("Test Mock Server", func() {
 		}
 
 		w := httptest.NewRecorder()
+
+		id := fmt.Sprintf("%d", time.Now().UnixNano())
+		req = pipe.PrepareRequest(id, req)
 
 		requestHandler(w, req)
 
@@ -48,10 +51,10 @@ var _ = Describe("Test Mock Server", func() {
 		const headerValue = "TestValue"
 
 		//use the pipe fitting to create the pipeline
-		pipeline := createPipeline()
+		pipe := createPipe()
 
 		//get our request handler
-		requestHandler := pipeline.RequestHandlerFunc()
+		requestHandler := pipe.RequestHandlerFunc()
 
 		//Mock up our apid server
 		server := &mockhttpserver.MockServer{}
@@ -100,6 +103,9 @@ var _ = Describe("Test Mock Server", func() {
 
 		w := httptest.NewRecorder()
 
+		id := fmt.Sprintf("%d", time.Now().UnixNano())
+		req = pipe.PrepareRequest(id, req)
+
 		requestHandler(w, req)
 
 		//when apid returns a 404, the plugin should return a 401
@@ -113,10 +119,10 @@ var _ = Describe("Test Mock Server", func() {
 		const headerValue = "TestValue"
 
 		//use the pipe fitting to create the pipeline
-		pipeline := createPipeline()
+		pipe := createPipe()
 
 		//get our request handler
-		requestHandler := pipeline.RequestHandlerFunc()
+		requestHandler := pipe.RequestHandlerFunc()
 
 		//Mock up our apid server
 		server := &mockhttpserver.MockServer{}
@@ -171,6 +177,9 @@ var _ = Describe("Test Mock Server", func() {
 
 		w := httptest.NewRecorder()
 
+		id := fmt.Sprintf("%d", time.Now().UnixNano())
+		req = pipe.PrepareRequest(id, req)
+
 		requestHandler(w, req)
 
 		Expect(w.Code).Should(Equal(http.StatusOK), "Api Key")
@@ -183,7 +192,7 @@ var _ = Describe("Test Mock Server", func() {
 })
 
 //mock endpoint url. "http://localhost:8181/verifiers/apikey"
-func createPipeline() pipeline.Pipe {
+func createPipe() pipeline.Pipe {
 
 	conf := make(map[interface{}]interface{})
 	conf["apidUri"] = "http://localhost:8181/verifiers/apikey"
@@ -203,7 +212,7 @@ func createPipeline() pipeline.Pipe {
 
 	pipeDef := pipeline.NewDefinition(reqFittings, []pipeline.FittingWithID{})
 
-	pipe := pipeDef.CreatePipe(fmt.Sprintf("%d", time.Now().UnixNano()))
+	pipe := pipeDef.CreatePipe()
 
 	return pipe
 }

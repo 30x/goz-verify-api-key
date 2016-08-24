@@ -101,7 +101,7 @@ func CreateFitting(config interface{}) (pipeline.Fitting, error) {
 func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		control := w.(pipeline.ControlHolder).Control()
+		control := pipeline.ControlFromContext(r.Context())
 		log := control.Log()
 
 		apiKey := r.Header.Get(f.config.keyHeader)
@@ -129,7 +129,7 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 		req, err := http.NewRequest("POST", f.config.apidUri, strings.NewReader(form.Encode()))
 		if err != nil {
 			log.Debugf("error creating request: %s\n", err.Error())
-			control.SendError(err)
+			control.HandleError(w, err)
 			return
 		}
 
@@ -141,7 +141,7 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 			res, err := client.Do(req)
 			if err != nil {
 				log.Debugf("error getting from server: %s\n", err.Error())
-				control.SendError(err)
+				control.HandleError(w, err)
 				return nil
 			}
 			defer res.Body.Close()
@@ -149,7 +149,7 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 			resBytes, err := ioutil.ReadAll(res.Body)
 			if err != nil {
 				log.Debugf("error reading reply: %s\n", err.Error())
-				control.SendError(err)
+				control.HandleError(w, err)
 				return nil
 			}
 
@@ -159,7 +159,7 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 					w.WriteHeader(http.StatusNotFound)
 				} else {
 					log.Debugf("key verification code: %d message: %s\n", res.StatusCode, string(resBytes))
-					control.SendError(fmt.Errorf("internal error with key verification"))
+					control.HandleError(w, fmt.Errorf("internal error with key verification"))
 				}
 				return nil
 			}
@@ -168,7 +168,7 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 			failResponse := KMSResponseFail{}
 			err = json.Unmarshal(resBytes, &failResponse)
 			if err != nil {
-				control.SendError(err)
+				control.HandleError(w, err)
 				return nil
 			}
 			if failResponse.Errinfo.ErrorCode != "" {
@@ -186,7 +186,7 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 			response := KMSResponseSuccess{}
 			err = json.Unmarshal(resBytes, &response)
 			if err != nil {
-				control.SendError(err)
+				control.HandleError(w, err)
 				return nil
 			}
 			flowData := control.FlowData()
@@ -201,7 +201,7 @@ func (f *verifyAPIKeyFitting) RequestHandlerFunc() http.HandlerFunc {
 		}, nil)
 
 		if err != nil {
-			control.SendError(err)
+			control.HandleError(w, err)
 		}
 	}
 }
